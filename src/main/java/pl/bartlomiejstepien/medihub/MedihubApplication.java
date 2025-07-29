@@ -1,0 +1,13 @@
+package pl.bartlomiejstepien.medihub;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MedihubApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(MedihubApplication.class, args);
+	}
+
+}
