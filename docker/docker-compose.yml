@@ -1,0 +1,106 @@
+# This docker compose contains all dependencies required to run MEDIHUB
+services:
+
+  ########################## Database ###############################
+  medihub-postgresql:
+    image: postgres:17.5
+    restart: always
+    shm_size: 128mb
+    ports:
+      - "15432:5432"
+    networks:
+      - medihub-network
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 8U!vv$=^L?+rN9enC?wE5:Z336eie#
+
+  medihub-postgresql-ui:
+    image: dpage/pgadmin4:9.6.0
+    restart: always
+    depends_on:
+      - medihub-postgresql
+    ports:
+      - "8090:80"
+    networks:
+      - medihub-network
+    environment:
+      PGADMIN_DEFAULT_EMAIL: medihub_admin@medihub.pl
+      PGADMIN_DEFAULT_PASSWORD: testpass
+
+
+  ########################## Kafka ###############################
+  medihub-kafka:
+    image: confluentinc/cp-kafka:8.0.0
+    hostname: medihub_kafka
+    container_name: medihub_kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - medihub-network
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://medihub_kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@medihub_kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://medihub_kafka:29092,CONTROLLER://medihub_kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+  medihub-schema-registry:
+    image: confluentinc/cp-schema-registry:8.0.0
+    hostname: medihub_schema_registry
+    container_name: medihub_schema_registry
+    depends_on:
+      - medihub-kafka
+    ports:
+      - "8081:8081"
+    networks:
+      - medihub-network
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'medihub_kafka:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: "http"
+
+  medihub-kafka-ui:
+    image: kafbat/kafka-ui:v1.3.0
+    container_name: kafka-ui
+    ports:
+      - "8091:8080"
+    depends_on:
+      - medihub-kafka
+      - medihub-schema-registry
+    networks:
+      - medihub-network
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: medihub_kafka:29092
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9101
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://medihub_schema_registry:8081
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_AUDIT_TOPICAUDITENABLED: 'true'
+      KAFKA_CLUSTERS_0_AUDIT_CONSOLEAUDITENABLED: 'true'
+#    volumes:
+#      - ~/kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
+#    volumes:
+#      - ./kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
+
+networks:
+  medihub-network:
+    driver: bridge
+
+volumes:
+  postgresql-data:

@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: medihub
+  jpa:
+    hibernate:
+          ddl-auto: validate
+
