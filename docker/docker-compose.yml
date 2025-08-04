@@ -4,7 +4,7 @@ services:
   ########################## Database ###############################
   medihub-postgresql:
     image: postgres:17.5
-    restart: always
+    restart: unless-stopped
     shm_size: 128mb
     ports:
       - "15432:5432"
@@ -17,7 +17,7 @@ services:
 
   medihub-postgresql-ui:
     image: dpage/pgadmin4:9.6.0
-    restart: always
+    restart: unless-stopped
     depends_on:
       - medihub-postgresql
     ports:
@@ -34,6 +34,7 @@ services:
     image: confluentinc/cp-kafka:8.0.0
     hostname: medihub_kafka
     container_name: medihub_kafka
+    restart: unless-stopped
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -63,6 +64,7 @@ services:
     image: confluentinc/cp-schema-registry:8.0.0
     hostname: medihub_schema_registry
     container_name: medihub_schema_registry
+    restart: unless-stopped
     depends_on:
       - medihub-kafka
     ports:
@@ -77,6 +79,7 @@ services:
 
   medihub-kafka-ui:
     image: kafbat/kafka-ui:v1.3.0
+    restart: unless-stopped
     container_name: kafka-ui
     ports:
       - "8091:8080"
@@ -98,9 +101,40 @@ services:
 #    volumes:
 #      - ./kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
 
+
+  ########################## Monitoring ###############################
+  medihub-prometheus:
+    image: prom/prometheus
+    restart: unless-stopped
+    container_name: medihub-prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      medihub-network:
+    volumes:
+      - prometheus-data:/prometheus
+
+
+  medihub-grafana:
+    image: grafana/grafana-oss
+    container_name: medihub-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      medihub-network:
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin
+
+
 networks:
   medihub-network:
     driver: bridge
 
 volumes:
-  postgresql-data:
+  postgresql-data: {}
+  prometheus-data: {}
+  grafana-data: {}
