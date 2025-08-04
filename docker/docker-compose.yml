@@ -13,7 +13,9 @@ services:
     volumes:
       - postgresql-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: 8U!vv$=^L?+rN9enC?wE5:Z336eie#
+      POSTGRES_USER: medihub_dev
+      POSTGRES_PASSWORD: "8U!vv$=^L?+rN9enC?wE5:Z336eie#"
+      POSTGRES_DB: medihub
 
   medihub-postgresql-ui:
     image: dpage/pgadmin4:9.6.0

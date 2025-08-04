@@ -5,3 +5,11 @@ spring:
     hibernate:
           ddl-auto: validate
 
+
+  liquibase:
+    enabled: true
+    clear-checksums: false
+  datasource:
+    url: jdbc:postgresql://localhost:15432/medihub
+    password: "8U!vv$=^L?+rN9enC?wE5:Z336eie#"
+    username: medihub_dev
