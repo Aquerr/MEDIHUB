@@ -3,7 +3,7 @@ spring:
     name: medihub
   jpa:
     hibernate:
-          ddl-auto: validate
+      ddl-auto: validate
 
 
   liquibase:
@@ -13,3 +13,8 @@ spring:
     url: jdbc:postgresql://localhost:15432/medihub
     password: "8U!vv$=^L?+rN9enC?wE5:Z336eie#"
     username: medihub_dev
+
+
+medihub:
+  logs:
+    location: logs
